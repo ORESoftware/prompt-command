@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+all_interos_export="yep";
+
+if [[ ! "$SHELLOPTS" =~ "allexport" ]]; then
+    all_interos_export="nope";
+    set -a;  # we export every declared function using this flag
+fi
+
 export previous_pwd="$PWD"
 
 filter_my_bsh_history(){
@@ -37,11 +44,13 @@ filter_my_bsh_history(){
 
 }
 
-export -f filter_my_bsh_history;
 
 export previous_cmd="";
 
 run_bash_history(){
+
+    local pid="$1"
+    local ec="$2"
 
     read skip rest < <(history 1 );  # first token skipped, remainder stored in variable called rest
 
@@ -58,7 +67,7 @@ run_bash_history(){
     export previous_cmd="$hist"
 
     json="$(cat <<EOF
-{"user":"$USER","num":"$skip","time":"$(date)","pwd":"$previous_pwd","pid":$!,"exit_code":$?,"cmd":"$hist"}
+{"user":"$USER","num":"$skip","time":"$(date)","pwd":"$previous_pwd","pid":$pid,"exit_code":$ec,"cmd":"$hist"}
 EOF
 )"
 
@@ -67,7 +76,6 @@ EOF
 
 }
 
-export -f run_bash_history;
 
 
 remove_old_history(){
@@ -88,16 +96,15 @@ remove_old_history(){
 
 }
 
-export -f remove_old_history;
-
 
 read_my_bash_history(){
   cat ~/my_bash_history | jq
 }
 
 
-export -f read_my_bash_history;
-
-export PROMPT_COMMAND='set +e; run_bash_history;';
+export PROMPT_COMMAND='run_bash_history $! $?;';
 
 
+if [[ "$all_interos_export" == "nope" ]]; then
+  set +a;
+fi
