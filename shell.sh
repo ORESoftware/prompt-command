@@ -71,6 +71,10 @@ run_bash_history(){
 
     export previous_cmd="$hist"
 
+    data="$( jq -nc --arg str "$hist" '{"attr": $str}' )"
+    echo "data: $data"
+    hist="$(echo "$data" | jq -r '.attr')"
+
     json="$(cat <<EOF
 {"user":"$USER","num":"$skip","time":"$(date)","pwd":"$previous_pwd","pid":$pid,"exit_code":$ec,"cmd":"$hist"}
 EOF
@@ -81,8 +85,9 @@ EOF
    read num_lines rest < <(wc -l "$HOME/my_bash_history")
 
    if [[ "$num_lines" -gt '3' ]]; then
-        echo 'DE LETTING'
-       set -i '0,1d' "$HOME/my_bash_history"
+   :
+#       sed '0,1d' "$HOME/my_bash_history" > "$HOME/my_bash_history2"
+#       cat "$HOME/my_bash_history2" > "$HOME/my_bash_history"
    fi
 
    export previous_pwd="$PWD";
