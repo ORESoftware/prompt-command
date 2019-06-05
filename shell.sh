@@ -7,6 +7,9 @@ if [[ ! "$SHELLOPTS" =~ "allexport" ]]; then
     set -a;  # we export every declared function using this flag
 fi
 
+
+. locking.sh
+
 export previous_pwd="$PWD"
 
 filter_my_bsh_history(){
@@ -64,6 +67,8 @@ run_bash_history(){
         return;
     fi
 
+    ql_acquire_lock bash_hist
+
     export previous_cmd="$hist"
 
     json="$(cat <<EOF
@@ -72,7 +77,17 @@ EOF
 )"
 
    echo "$json" >> $HOME/my_bash_history;
+
+   read num_lines rest < <(wc -l "$HOME/my_bash_history")
+
+   if [[ "$num_lines" -gt '3' ]]; then
+        echo 'DE LETTING'
+       set -i '0,1d' "$HOME/my_bash_history"
+   fi
+
    export previous_pwd="$PWD";
+
+   ql_release_lock bash_hist
 
 }
 

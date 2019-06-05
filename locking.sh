@@ -27,15 +27,27 @@ ql_remove_all_locks(){
 
 ql_rm_lock(){
 
-  if [[ -z "$1" ]]; then
-     echo 'No argument passed, no lock can be removed.' > /dev/stderr;
-     return 1;
-  fi
+    if [[ -z "$1" ]]; then
+         echo 'No argument passed, no lock can be removed.' > /dev/stderr;
+         return 1;
+    fi
 
-  rm -rf "$all_locks/$1"
+    local lock_name="$(sanitize_lock_name "$1")";
+
+    if [[ -z "$lock_name" ]]; then
+        echo "lock name was empty after sanitizing unacceptable characters: '$1'";
+        return 1;
+    fi
+
+    rm -rf "$all_locks/$lock_name"
 }
 
  # apt-get install socat
+
+sanitize_lock_name(){
+    # echo "$1" | tr '"' '' | sed "s/'//g" | sed s'/[— – -]/_/g'
+    echo "$1" | sed s'/[— – -]/_/g'
+}
 
 ql_acquire_lock(){
 
@@ -44,71 +56,42 @@ ql_acquire_lock(){
         return 1;
     fi
 
-    local lock_dir="$all_locks/$1"
+    local lock_name="$(sanitize_lock_name "$1")";
+
+     if [[ -z "$lock_name" ]]; then
+        echo "lock name was empty after sanitizing unacceptable characters: '$1'";
+        return 1;
+    fi
+
+    local lock_dir="$all_locks/$lock_name"
     local fifo="$lock_dir/fifo.lock";
-    local socket="$lock_dir/uds.sock";
 
     mkdir "$lock_dir" &> /dev/null && {
         mkfifo "$fifo"
-        touch "$socket"
         echo "$$" > "$lock_dir/pid.json"
         echo 'Acquired lock on first attempt.';
         return 0;
     }
 
     while true; do
-        echo 'Waiting for lock to be released.';
+        echo 'Waiting for lock to be released.' > /dev/stderr;
         local val="$(cat "$fifo")"
         if test "$val" == "unlocked"; then
           echo 'Acquired lock.';
           break;
-        else
-         echo "Message was: $val";
         fi
     done;
-
-#    while true; do
-#        echo 'Waiting for lock to be released.';
-##        local val="$(cat "$fifo")"
-#        result=$(nc -l -U "$socket" | read val; if test "$val" == "unlocked"; then
-#             echo "ready";
-#        fi);
-#
-#        if test "$result" == "ready"; then
-#          break;
-#        fi
-#    done;
-#
-#    ql_acquire_lock "$@"
 
 }
 
 # https://stackoverflow.com/questions/42075387/check-whether-named-pipe-fifo-is-open-for-writing
 
-is_named_pipe_already_opened2() {
-
-    local named_pipe="$1"
-    # Make sure it's a named pipe
-    if ! [[ -p "$named_pipe" ]]; then
-        echo "Named pipe does not exist $named_pipe";
-        return 1
-    fi
-    # Try to write zero bytes in the background
-    ( (echo "unlocked" > "$named_pipe" )  & ) &>/dev/null
-    pid="$!"
-    # Wait a short amount of time
-    sleep 0.25
-    # Kill the background process. If kill succeeds, then
-    # the write was blocked indicating that someone
-    # else is already writing to the named pipe.
-    ( kill -PIPE "$pid" ) &> /dev/null
-}
 
 is_named_pipe_already_opened0(){
  echo '' 1<>"$1" >"$1"
 }
 
-is_named_pipe_already_opened() {
+is_named_pipe_being_read() {
    /Users/alex/codes/ores/prompt-command/fcntl "$1"
 }
 
@@ -119,8 +102,9 @@ ql_release_lock(){
         return 1;
     fi
 
-    local lock_dir="$all_locks/$1"
+    local lock_name="$(sanitize_lock_name "$1")";
 
+    local lock_dir="$all_locks/$lock_name"
 
     if [[ ! -d "$lock_dir" ]]; then
       return 0;
@@ -139,63 +123,17 @@ ql_release_lock(){
       return 0;
     fi
 
-    echo "About to release lock with key: $1"
-    echo "Writing unlocked to fifo...";
-
-#    ( cat "$fifo" ) &
-#    wait $!
-
-#     ls "$fifo"
-
-#    echo 'test' | dd flag='nonblock' of="$fifo" status=none || {
-#       rm -rf "$lock_dir"
-#       echo "Lock deleted."
-#       return 0;
-#    }
-
-#    val="$(echo "unlocked" > "$fifo" > >(read line; echo "$line"))";
-
-#    val=$(cat "$fifo" < <(echo "unlocked"));
-
-#    val="$(read line; echo "$line") > "$fifo" > >()";
-#    echo "val: $val"
-
-#    local socket="$lock_dir/uds.sock";
-#
-#    echo "unlocked" | nc -U "$socket"
-
-#    echo "unlocked" > "$fifo"
-
     # https://unix.stackexchange.com/questions/522877/how-to-cat-named-pipe-without-waiting/522881
 
 
-   if  is_named_pipe_already_opened "$fifo"; then
+   if  is_named_pipe_being_read "$fifo"; then
         echo "unlocked" > "$fifo"
    else
-        rm -rf "$lock_dir"
+       rm -rf "$lock_dir"
        echo "Lock deleted."
    fi
 
-
-#   if ! is_named_pipe_already_opened "$fifo"; then
-#       rm -rf "$lock_dir"
-#       echo "Lock deleted."
-#   fi
-
-
-#    local val="$(cat 0<> "$fifo" < "$fifo" < <(echo "locked"; echo "unlocked"))"
-##    local val="$(cat < "$fifo" < <(echo "unlocked"))"
-#
-#    echo 'No longer waiting on cat.';
-#
-#    if test "$val" == 'unlocked'; then
-#       rm -rf "$lock_dir"
-#       echo "Lock deleted."
-#    fi
-
 }
-
-
 
 
 if [[ "$all_interos_export" == "nope" ]]; then

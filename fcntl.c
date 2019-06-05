@@ -5,11 +5,10 @@
 #include<stdlib.h>
 #include <sys/stat.h>
 
-#define SERVFIFO "/Users/alex/.locking/ql/locks/a/fifo.lock"
 #define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
 
 void syserr(const char *str){
-    perror(str);
+//    perror(str);
     exit(1);
 }
 
@@ -33,6 +32,7 @@ int main(int argc, char** argv){
     // create a reader - the process itself - non-blocking
 
     int fdr = open(fifo, O_RDONLY | O_NONBLOCK);
+
     if (fdr == -1){
       syserr("non-blocking open for read no writers failed");
     }
@@ -44,8 +44,7 @@ int main(int argc, char** argv){
       syserr("non-blocking open with readers failed");
     }
 
-
-    printf("non-blocking open for write succeeded\n");
+//    printf("non-blocking open for write succeeded\n");
 
     close(fdw);
     close(fdr);
