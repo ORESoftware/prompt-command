@@ -17,10 +17,6 @@ int main(int argc, char** argv){
 
     umask(0);
 
-//    if (mkfifo(SERVFIFO, FILE_MODE) < 0 && errno != EEXIST){
-//      syserr("mkfifo");
-//    }
-
     // try to open for write with no readers
 
     int fdw = open(SERVFIFO, O_WRONLY | O_NONBLOCK);
@@ -48,5 +44,5 @@ int main(int argc, char** argv){
 
     close(fdw);
     close(fdr);
-//    unlink(SERVFIFO);
+
 }
