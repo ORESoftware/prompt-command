@@ -80,6 +80,7 @@ ql_acquire_lock(){
 #    done;
 #
 #    ql_acquire_lock "$@"
+
 }
 
 # https://stackoverflow.com/questions/42075387/check-whether-named-pipe-fifo-is-open-for-writing
@@ -103,6 +104,9 @@ is_named_pipe_already_opened2() {
     ( kill -PIPE "$pid" ) &> /dev/null
 }
 
+is_named_pipe_already_opened0(){
+ echo '' 1<>"$1" >"$1"
+}
 
 is_named_pipe_already_opened() {
    /Users/alex/codes/ores/prompt-command/fcntl "$1"
@@ -171,6 +175,13 @@ ql_release_lock(){
         rm -rf "$lock_dir"
        echo "Lock deleted."
    fi
+
+
+#   if ! is_named_pipe_already_opened "$fifo"; then
+#       rm -rf "$lock_dir"
+#       echo "Lock deleted."
+#   fi
+
 
 #    local val="$(cat 0<> "$fifo" < "$fifo" < <(echo "locked"; echo "unlocked"))"
 ##    local val="$(cat < "$fifo" < <(echo "unlocked"))"
