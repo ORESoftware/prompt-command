@@ -71,9 +71,9 @@ run_bash_history(){
 
     export previous_cmd="$hist"
 
-    data="$( jq -nc --arg str "$hist" '{"attr": $str}' )"
-    echo "data: $data"
-    hist="$(echo "$data" | jq -r '.attr')"
+#    data="$( jq -nc --arg str "$hist" '{"attr": $str}' )"
+#    echo "data: $data"
+#    hist="$(echo "$data" | jq -r '.attr')"
 
     json="$(cat <<EOF
 {"user":"$USER","num":"$skip","time":"$(date)","pwd":"$previous_pwd","pid":$pid,"exit_code":$ec,"cmd":"$hist"}
