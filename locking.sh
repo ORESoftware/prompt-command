@@ -56,7 +56,13 @@ increment_decrement_lock_count(){
 
  if [[ "$2" != "a" ]]; then
      echo 0;
+     return;
  fi;
+
+ if [[ "$(uname -s)" == 'Darwin' ]]; then
+   echo 0;
+   return 0;
+ fi
 
 (
 flock -x 200
@@ -129,8 +135,8 @@ is_named_pipe_already_opened0(){
 }
 
 is_named_pipe_being_read() {
-#   /Users/alex/codes/ores/prompt-command/fcntl "$1"
-/home/oleg/codes/oresoftware/prompt-command/fcntl "$1"
+   /Users/alex/codes/ores/prompt-command/fcntl_mac "$1"
+#/home/oleg/codes/oresoftware/prompt-command/fcntl "$1"
 }
 
 ql_release_lock(){

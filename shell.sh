@@ -47,6 +47,41 @@ filter_my_bsh_history(){
 
 }
 
+clean_str_to_json(){
+
+    prev='';
+    result='';
+    back_slash='\'
+
+    bad_str="$1";
+
+    for i in $(seq 1 ${#bad_str}); do
+
+       token="${bad_str:i-1:1}"
+
+       if [[ "$token" != '"' ]]; then
+         result+="$token";
+         prev="$token"
+         continue;
+       fi
+
+       if [[ "$prev" == '\' ]]; then
+         result+="$token";
+         prev="$token"
+         continue;
+       fi
+
+       result+="${back_slash}${token}";
+       prev="$token"
+
+    done;
+
+    echo "$result";
+
+}
+
+
+
 
 export previous_cmd="";
 
@@ -71,12 +106,15 @@ run_bash_history(){
 
     export previous_cmd="$hist"
 
-#    data="$( jq -nc --arg str "$hist" '{"attr": $str}' )"
-#    echo "data: $data"
-#    hist="$(echo "$data" | jq -r '.attr')"
+#    data="$( jq -nc --arg str "$hist" '{"attr":$str}' )"
+#    hist="$(echo "$data" | jq '.attr')"
+
+     clean_hist="$(clean_str_to_json "$hist")"
+
+#    hist="$(echo "$hist" | jq -r -R)"  # clean hist
 
     json="$(cat <<EOF
-{"user":"$USER","num":"$skip","time":"$(date)","pwd":"$previous_pwd","pid":$pid,"exit_code":$ec,"cmd":"$hist"}
+{"user":"$USER","num":"$skip","time":"$(date)","pwd":"$previous_pwd","pid":$pid,"exit_code":$ec,"cmd":"$clean_hist"}
 EOF
 )"
 
