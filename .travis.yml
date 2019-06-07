@@ -1,19 +1,46 @@
 language: c
 services: docker
+
 git:
   depth: 1
+
+os:
+  - linux
+  - osx
+  - windows
 
 jobs:
   include:
    - script: ./scripts/travis/run.sh 8
      name: nodejs_8
+     os: linux
    - script: ./scripts/travis/run.sh 9
      name: nodejs_9
+     os: linux
    - script: ./scripts/travis/run.sh 10
      name: nodejs_10
+     os: linux
    - script: ./scripts/travis/run.sh 11
      name: nodejs_11
+     os: linux
    - script: ./scripts/travis/run.sh 12
      name: nodejs_12
+     os: linux
+   - script: ./scripts/travis/run.sh 8
+     name: nodejs_8
+     os: osx
+   - script: ./scripts/travis/run.sh 9
+     name: nodejs_9
+     os: osx
+   - script: ./scripts/travis/run.sh 10
+     name: nodejs_10
+     os: osx
+   - script: ./scripts/travis/run.sh 11
+     name: nodejs_11
+     os: osx
+   - script: ./scripts/travis/run.sh 12
+     name: nodejs_12
+     os: osx
+
 
 
