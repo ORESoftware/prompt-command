@@ -1,0 +1,14 @@
+language: c
+services: docker
+jobs:
+  include:
+    - stage: nodejs_8
+      script: ./scripts/travis/run.sh 8
+    - stage: nodejs_9
+      script: ./scripts/travis/run.sh 9
+    - stage: nodejs_10
+      script: ./scripts/travis/run.sh 10
+    - stage: nodejs_11
+      script: ./scripts/travis/run.sh 11
+    - stage: nodejs_12
+      script: ./scripts/travis/run.sh 12
