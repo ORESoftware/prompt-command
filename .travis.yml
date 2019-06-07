@@ -2,10 +2,10 @@ language: c
 services: docker
 jobs:
   include:
-    - stage: nodejs
-    script: ./scripts/travis/run.sh 8
-    script: ./scripts/travis/run.sh
-    script: ./scripts/travis/run.sh 10
-    script: ./scripts/travis/run.sh 11
-    script: ./scripts/travis/run.sh 12
+   - script: ./scripts/travis/run.sh 8
+   - script: ./scripts/travis/run.sh 9
+   - script: ./scripts/travis/run.sh 10
+   - script: ./scripts/travis/run.sh 11
+   - script: ./scripts/travis/run.sh 12
+
 
