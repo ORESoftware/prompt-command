@@ -1,11 +1,19 @@
 language: c
 services: docker
+git:
+  depth: 1
+
 jobs:
   include:
    - script: ./scripts/travis/run.sh 8
+     name: nodejs_8
    - script: ./scripts/travis/run.sh 9
+     name: nodejs_9
    - script: ./scripts/travis/run.sh 10
+     name: nodejs_10
    - script: ./scripts/travis/run.sh 11
+     name: nodejs_11
    - script: ./scripts/travis/run.sh 12
+     name: nodejs_12
 
 
