@@ -11,3 +11,5 @@ export NVM_DIR="$HOME/.nvm"
 
 nvm install "$1"
 nvm use "$1"
+
+echo "This is foo: $foo";

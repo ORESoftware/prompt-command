@@ -76,4 +76,36 @@ jobs:
        - foo=bar10
 
 
+   - script: ./scripts/travis/run.sh 8
+     name: nodejs_8_osx
+     os: windows
+     env:
+       - foo=bar11
 
+
+   - script: ./scripts/travis/run.sh 9
+     name: nodejs_9_osx
+     os: windows
+     env:
+       - foo=bar12
+
+
+   - script: ./scripts/travis/run.sh 10
+     name: nodejs_10_osx
+     os: windows
+     env:
+       - foo=bar13
+
+
+   - script: ./scripts/travis/run.sh 11
+     name: nodejs_11_osx
+     os: windows
+     env:
+       - foo=bar14
+
+
+   - script: ./scripts/travis/run.sh 12
+     name: nodejs_12_osx
+     os: windows
+     env:
+       - foo=bar15
