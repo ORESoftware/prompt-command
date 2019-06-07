@@ -5,36 +5,75 @@ git:
 
 jobs:
   include:
+
    - script: ./scripts/travis/run.sh 8
      name: nodejs_8
      os: linux
+     env:
+       - foo=bar1
+
+
    - script: ./scripts/travis/run.sh 9
      name: nodejs_9
      os: linux
+     env:
+       - foo=bar2
+
+
    - script: ./scripts/travis/run.sh 10
      name: nodejs_10
      os: linux
+     env:
+       - foo=bar3
+
+
    - script: ./scripts/travis/run.sh 11
      name: nodejs_11
      os: linux
+     env:
+       - foo=bar4
+
+
    - script: ./scripts/travis/run.sh 12
      name: nodejs_12
      os: linux
+     env:
+       - foo=bar5
+
+
    - script: ./scripts/travis/run.sh 8
-     name: nodejs_8
+     name: nodejs_8_osx
      os: osx
+     env:
+       - foo=bar6
+
+
    - script: ./scripts/travis/run.sh 9
-     name: nodejs_9
+     name: nodejs_9_osx
      os: osx
+     env:
+       - foo=bar7
+
+
    - script: ./scripts/travis/run.sh 10
-     name: nodejs_10
+     name: nodejs_10_osx
      os: osx
+     env:
+       - foo=bar8
+
+
    - script: ./scripts/travis/run.sh 11
-     name: nodejs_11
+     name: nodejs_11_osx
      os: osx
+     env:
+       - foo=bar9
+
+
    - script: ./scripts/travis/run.sh 12
-     name: nodejs_12
+     name: nodejs_12_osx
      os: osx
+     env:
+       - foo=bar10
 
 
 
