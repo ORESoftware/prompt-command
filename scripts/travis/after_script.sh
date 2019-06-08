@@ -2,4 +2,4 @@
 
 echo 'The after_script env:';
 
-env;
+env | sort;

@@ -2,4 +2,4 @@
 
 echo 'The before_script env:';
 
-env;
+env | sort;
