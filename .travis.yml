@@ -3,6 +3,10 @@ language: minimal
 git:
   depth: 1
 
+
+before_script: './scripts/travis/before_script.sh'
+after_script: './scripts/travis/after_script.sh'
+
 jobs:
   include:
 
