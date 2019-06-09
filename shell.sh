@@ -162,6 +162,20 @@ read_my_bash_history(){
 
 export PROMPT_COMMAND='run_bash_history $! $?;';
 
+export shell_count=1
+
+read_up_line_from_bash_history(){
+ export shell_count=$((++shell_count))
+ tail -n "$shell_count" ~/my_bash_history |  head -n 1
+}
+
+read_down_line_from_bash_history(){
+ export shell_count=$((--shell_count))
+ tail -n "$shell_count" ~/my_bash_history |  head -n 1
+}
+
+bind -x '"\C-o": read_up_line_from_bash_history'
+bind -x '"\C-p": read_down_line_from_bash_history'
 
 if [[ "$all_interos_export" == "nope" ]]; then
   set +a;
