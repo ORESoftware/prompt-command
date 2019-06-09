@@ -92,14 +92,26 @@ decrement_lock_count(){
 
 }
 
+ql_list(){
+  mkdir -p "$all_locks";
+  find "$all_locks" -mindepth 1 -maxdepth 1 -type d  -printf '%P\n' | sort
+}
 
+ql_ls(){
+  ql_list "$@"
+}
 
 ql_acquire_lock(){
 
     local is_skip="$2"
 
     if [[ -z "$1" ]]; then
-        echo "First argument (lock name) must be defined.";
+        echo "First argument (the lock-name) must be defined.";
+        return 1;
+    fi
+
+    if [[   "${1// }" != "$1" ]]; then
+        echo "First argument (the lock-name) cannot contain white-space.";
         return 1;
     fi
 
@@ -179,6 +191,11 @@ ql_release_lock(){
         return 1;
     fi
 
+    if [[   "${1// }" != "$1" ]]; then
+        echo "First argument (the lock-name) cannot contain white-space.";
+        return 1;
+    fi
+
     local lock_name="$(sanitize_lock_name "$1")";
 
     local lock_dir="$all_locks/$lock_name"
@@ -218,8 +235,6 @@ ql_release_lock(){
        rm -rf "$lock_dir"
        [[ "$is_skip" != "--skip" ]] && echo "Lock deleted."
    fi
-
-
 
 
 }
