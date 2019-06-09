@@ -105,7 +105,7 @@ run_bash_history(){
         return;
     fi
 
-    ql_acquire_lock bash_hist --skip
+    ql_acquire_lock 'bash_hist' --skip
 
     export previous_cmd="$hist"
 
@@ -133,7 +133,7 @@ EOF
 
    export previous_pwd="$PWD";
 
-   ql_release_lock bash_hist --skip
+   ql_release_lock 'bash_hist' --skip
 
 }
 
@@ -165,16 +165,16 @@ read_my_bash_history(){
 
 export PROMPT_COMMAND='run_bash_history $! $?;';
 
-export shell_count=1
+export shell_count=0
 
 read_up_line_from_bash_history(){
- export shell_count=$((shell_count++))
- cat < <(tail -n "$shell_count" ~/my_bash_history |  head -n 1)
+ export shell_count=$((++shell_count))
+ cat < <(tail -n "$shell_count" ~/my_bash_history |  head -n 1 | jq -r '.cmd')
 }
 
 read_down_line_from_bash_history(){
- export shell_count=$((shell_count--))
- cat < <(tail -n "$shell_count" ~/my_bash_history |  head -n 1 )
+ export shell_count=$((--shell_count))
+ cat < <(tail -n "$shell_count" ~/my_bash_history |  head -n 1 | jq -r '.cmd')
 }
 
 bind -x '"\C-o": read_up_line_from_bash_history'

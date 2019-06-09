@@ -118,6 +118,46 @@ get_appropriate_return_code(){
   fi
 }
 
+
+ql_on_finish() {
+
+  local current_pid="$$";
+
+  echo "first $1, second: $2" &> /dev/stderr
+  echo "the current pid: $current_pid" &> /dev/stderr
+
+  mkdir -p "$all_locks"
+
+  find "$all_locks" -mindepth 1 -maxdepth 1 -type d | while read pth; do
+
+  ls "$pth" &> /dev/stderr
+
+  lock_pid="$(cat "$pth/pid.json")"
+
+  echo "pth: $pth, lock pid: $lock_pid" &> /dev/stderr
+
+  if [[ "$lock_pid" == "$current_pid" ]]; then
+    ql_release_lock "$(basename "$pth")"
+    return 0;
+  fi
+
+  for p in "$(pgrep -P "$$")"; do
+    if [[ "$p" == "$current_pid" ]]; then
+        ql_release_lock "$(basename "$pth")"
+        return 0;
+    fi
+  done;
+
+  done;
+}
+
+
+add_my_trap(){
+    trap ql_on_finish EXIT SIGTERM SIGINT INT TERM SIGCHLD # SIGUSR1 SIGUSR2
+}
+
+add_my_trap
+
 ql_acquire_lock(){
 
     local is_skip="$2"
