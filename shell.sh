@@ -102,14 +102,14 @@ run_bash_history(){
         return;
     fi
 
-    ql_acquire_lock bash_hist
+    ql_acquire_lock bash_hist --skip
 
     export previous_cmd="$hist"
 
 #    data="$( jq -nc --arg str "$hist" '{"attr":$str}' )"
 #    hist="$(echo "$data" | jq '.attr')"
 
-     clean_hist="$(clean_str_to_json "$hist")"
+    local clean_hist="$(clean_str_to_json "$hist")"
 
 #    hist="$(echo "$hist" | jq -r -R)"  # clean hist
 
@@ -130,7 +130,7 @@ EOF
 
    export previous_pwd="$PWD";
 
-   ql_release_lock bash_hist
+   ql_release_lock bash_hist --skip
 
 }
 

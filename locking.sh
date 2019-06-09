@@ -59,7 +59,7 @@ increment_lock_count(){
 
   local lock_name="xxxxx";
 
-  echo "increment: $lock_name" &> /dev/stderr
+#  echo "increment: $lock_name" &> /dev/stderr
 
   ql_acquire_lock "$lock_name"  --skip &> /dev/stderr
 
@@ -75,16 +75,16 @@ increment_lock_count(){
 
 decrement_lock_count(){
 
-   local lock_dir="$HOME/.locking/counts/$1";
+  local lock_dir="$HOME/.locking/counts/$1";
   local lock_name="home_locking_counts_$1";
 
    local lock_name="xxxxx";
-   echo "decrement: $lock_name" &> /dev/stderr
+#   echo "decrement: $lock_name" &> /dev/stderr
 
   ql_acquire_lock "$lock_name"  --skip &> /dev/stderr
 
    touch "$lock_dir"
-   my_str=$(cat "$lock_dir");
+   my_str="$(cat "$lock_dir")";
    typeset -i my_num="${my_str:-"1"}"
    echo "$((--my_num))" | tee "$lock_dir"
 
@@ -122,35 +122,33 @@ ql_acquire_lock(){
        if [[ "--skip" != "$is_skip" ]]; then
             count=`increment_lock_count "$lock_name"`
 
-            echo "COUNT 1: $count"
-
-            if [[ "$count" > 1 ]]; then
-              echo 'Warning: Lock count was greater than 1 after lock acquisition.';
+            if [[ "$count" -ne '1' ]]; then
+              echo 'Warning: Lock count was not equal to 1 after lock acquisition.';
             fi
         fi
 
-        echo 'Acquired lock on first attempt.';
+        [[ "$is_skip" != "--skip" ]] && echo 'Acquired lock on first attempt.';
         return 0;
     }
 
     while true; do
+
         echo "Waiting for lock ('$lock_name') to be released." > /dev/stderr;
 
         local val="$(cat "$fifo")"
 
         if test "$val" == "unlocked"; then
 
-      if [[ "--skip" != "$is_skip" ]]; then
+          if [[ "--skip" != "$is_skip" ]]; then
 
-          count=`decrement_lock_count "$lock_name"`
+              count=`decrement_lock_count "$lock_name"`
 
-          echo "COUNT 2: $count"
+                if [[ "$count" -ne '0' ]]; then
+                  echo 'Lock count was not equal to 0 after lock release.';
+                fi
+           fi
 
-            if [[ "$count" > 0 ]]; then
-              echo 'Lock count was greater than 0 after lock release.';
-            fi
-       fi
-          echo 'Acquired lock.';
+          [[ "$is_skip" != "--skip" ]] && echo 'Acquired lock.';
           break;
         fi
     done;
@@ -177,7 +175,7 @@ ql_release_lock(){
    local is_skip="$2"
 
     if [[ -z "$1" ]]; then
-        echo "First argument must be defined.";
+        echo "First argument (lock name) must be defined.";
         return 1;
     fi
 
@@ -204,14 +202,13 @@ ql_release_lock(){
 
     # https://unix.stackexchange.com/questions/522877/how-to-cat-named-pipe-without-waiting/522881
 
-
      if [[ "--skip" != "$is_skip" ]]; then
-    count=`decrement_lock_count "$lock_name"`
 
+        count=`decrement_lock_count "$lock_name"`
 
-    if [[ "$count" > 0 ]]; then
-      echo 'Lock count was greater than 0.'
-    fi
+        if [[ "$count" -ne '0' ]]; then
+          echo 'Lock count was not equal to 0 after unlocking.'
+        fi
 
     fi
 
@@ -219,7 +216,7 @@ ql_release_lock(){
         echo "unlocked" > "$fifo"
    else
        rm -rf "$lock_dir"
-       echo "Lock deleted."
+       [[ "$is_skip" != "--skip" ]] && echo "Lock deleted."
    fi
 
 
