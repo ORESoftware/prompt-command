@@ -153,7 +153,7 @@ ql_on_finish() {
 
 
 add_my_trap(){
-    trap ql_on_finish EXIT SIGTERM SIGINT INT TERM SIGCHLD # SIGUSR1 SIGUSR2
+    trap ql_on_finish EXIT SIGTERM SIGINT INT TERM # SIGCHLD # SIGUSR1 SIGUSR2
 }
 
 add_my_trap
