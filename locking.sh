@@ -59,10 +59,10 @@ increment_decrement_lock_count(){
      return;
  fi;
 
- if [[ "$(uname -s)" == 'Darwin' ]]; then
-   echo 0;
-   return 0;
- fi
+# if [[ "$(uname -s)" == 'Darwin' ]]; then
+#   echo 0;
+#   return 0;
+# fi
 
 (
 flock -x 200
@@ -73,7 +73,7 @@ flock -x 200
    typeset -i my_num="${my_str:-"1"}"
    echo "$((my_num=my_num+$1))" | tee "$my_file"
 
-) 200>>/var/lock/mylockfile
+)200>>/var/lock/mylockfile
 
 }
 

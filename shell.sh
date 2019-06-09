@@ -8,7 +8,8 @@ if [[ ! "$SHELLOPTS" =~ "allexport" ]]; then
 fi
 
 
-. locking.sh
+actual_dir="$(cd $(dirname "$BASH_SOURCE") && pwd)"
+. "$actual_dir/locking.sh"
 
 export previous_pwd="$PWD"
 
