@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set +e;
+set -e;
 
 cd `dirname "$BASH_SOURCE"`;
 
@@ -16,8 +16,7 @@ ql_acquire_lock a
 
 echo "hmmm 111"
 
-
-(  sleep 1; ql_release_lock a; ) &
+( sleep 1; ql_release_lock a; ) &
 
 echo "hmmm 2"
 
