@@ -101,17 +101,36 @@ ql_ls(){
   ql_list "$@"
 }
 
+conditionally_exit_with_code(){
+  if true; then
+    return 0;
+  fi
+
+  if [[ ! -t 1 ]] ; then
+     exit "$1"
+  fi
+}
+
+get_appropriate_return_code(){
+  if true; then
+    echo '0'
+    return 0;
+  fi
+}
+
 ql_acquire_lock(){
 
     local is_skip="$2"
 
     if [[ -z "$1" ]]; then
         echo "First argument (the lock-name) must be defined.";
+        conditionally_exit_with_code 1;
         return 1;
     fi
 
     if [[   "${1// }" != "$1" ]]; then
         echo "First argument (the lock-name) cannot contain white-space.";
+        conditionally_exit_with_code 1;
         return 1;
     fi
 
@@ -119,6 +138,7 @@ ql_acquire_lock(){
 
      if [[ -z "$lock_name" ]]; then
         echo "lock name was empty after sanitizing unacceptable characters: '$1'";
+        conditionally_exit_with_code 1;
         return 1;
     fi
 
@@ -140,7 +160,11 @@ ql_acquire_lock(){
         fi
 
         [[ "$is_skip" != "--skip" ]] && echo 'Acquired lock on first attempt.';
+        conditionally_exit_with_code 0;
         return 0;
+
+    } || {
+       echo 'Could not acquire lock on first attempt.';
     }
 
     while true; do
@@ -184,15 +208,17 @@ is_named_pipe_being_read() {
 
 ql_release_lock(){
 
-   local is_skip="$2"
+    local is_skip="$2"
 
     if [[ -z "$1" ]]; then
         echo "First argument (lock name) must be defined.";
+        conditionally_exit_with_code 1;
         return 1;
     fi
 
-    if [[   "${1// }" != "$1" ]]; then
+    if [[ "${1// }" != "$1" ]]; then
         echo "First argument (the lock-name) cannot contain white-space.";
+        conditionally_exit_with_code 1;
         return 1;
     fi
 
@@ -201,12 +227,14 @@ ql_release_lock(){
     local lock_dir="$all_locks/$lock_name"
 
     if [[ ! -d "$lock_dir" ]]; then
-      return 0;
+      conditionally_exit_with_code 1;
+      return 1;
     fi
 
      if [[ ! -f "$lock_dir/pid.json" ]]; then
       echo 'There should be a pid.json file in the dir.' > /dev/stderr
-      return 0;
+      conditionally_exit_with_code 1
+      return 1;
     fi
 
 
@@ -232,11 +260,11 @@ ql_release_lock(){
    if  is_named_pipe_being_read "$fifo"; then
         echo "unlocked" > "$fifo"
    else
-       rm -rf "$lock_dir"
+       rm -rf "$lock_dir" | cat
        [[ "$is_skip" != "--skip" ]] && echo "Lock deleted."
    fi
 
-
+   echo -n '';
 }
 
 

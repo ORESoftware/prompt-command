@@ -6,16 +6,24 @@ cd `dirname "$BASH_SOURCE"`;
 
 source locking.sh
 
-#ql_release_lock a;
 ql_remove_all_locks
 
-ls -a "$HOME/.locking/ql/locks"
+ls "$HOME/.locking/ql/locks"
+
+echo "hmmm 1"
 
 ql_acquire_lock a
 
+echo "hmmm 111"
+
+
 (  sleep 1; ql_release_lock a; ) &
 
-ql_acquire_lock a;
+echo "hmmm 2"
+
+ql_acquire_lock a || echo 'wuttt'
+
+echo "hmmm 3"
 
 ql_release_lock a;
 
