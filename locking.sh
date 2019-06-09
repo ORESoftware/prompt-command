@@ -52,36 +52,66 @@ sanitize_lock_name(){
     echo "$1" | sed s'/[— – -]/_/g'
 }
 
-increment_decrement_lock_count(){
+increment_lock_count(){
 
- if [[ "$2" != "a" ]]; then
-     echo 0;
-     return;
- fi;
+  local lock_dir="$HOME/.locking/counts/$1";
+  local lock_name="home_locking_counts_$1"
 
-# if [[ "$(uname -s)" == 'Darwin' ]]; then
-#   echo 0;
-#   return 0;
-# fi
+  local lock_name="xxxxx";
 
-(
-flock -x 200
+#  echo "increment: $lock_name" &> /dev/stderr
 
-   my_file="$HOME/.locking/counts/counts.json"
-   touch "$my_file"
-   my_str=$(cat "$my_file");
-   typeset -i my_num="${my_str:-"1"}"
-   echo "$((my_num=my_num+$1))" | tee "$my_file"
+  ql_acquire_lock "$lock_name"  --skip &> /dev/stderr
 
-)200>>/var/lock/mylockfile
+   touch "$lock_dir"
+   my_str=$(cat "$lock_dir");
+   typeset -i my_num="${my_str:-"0"}"
+   echo "$((++my_num))" | tee "$lock_dir"
+
+  ql_release_lock "$lock_name"  --skip  &> /dev/stderr
 
 }
 
 
+decrement_lock_count(){
+
+  local lock_dir="$HOME/.locking/counts/$1";
+  local lock_name="home_locking_counts_$1";
+
+   local lock_name="xxxxx";
+#   echo "decrement: $lock_name" &> /dev/stderr
+
+  ql_acquire_lock "$lock_name"  --skip &> /dev/stderr
+
+   touch "$lock_dir"
+   my_str="$(cat "$lock_dir")";
+   typeset -i my_num="${my_str:-"1"}"
+   echo "$((--my_num))" | tee "$lock_dir"
+
+  ql_release_lock "$lock_name" --skip &> /dev/stderr
+
+}
+
+ql_list(){
+  mkdir -p "$all_locks";
+  find "$all_locks" -mindepth 1 -maxdepth 1 -type d  -printf '%P\n' | sort
+}
+
+ql_ls(){
+  ql_list "$@"
+}
+
 ql_acquire_lock(){
 
+    local is_skip="$2"
+
     if [[ -z "$1" ]]; then
-        echo "First argument must be defined.";
+        echo "First argument (the lock-name) must be defined.";
+        return 1;
+    fi
+
+    if [[   "${1// }" != "$1" ]]; then
+        echo "First argument (the lock-name) cannot contain white-space.";
         return 1;
     fi
 
@@ -96,31 +126,41 @@ ql_acquire_lock(){
     local fifo="$lock_dir/fifo.lock";
 
     mkdir "$lock_dir" &> /dev/null && {
+
         mkfifo "$fifo"
+
         echo "$$" > "$lock_dir/pid.json"
-        count=`increment_decrement_lock_count 1 "$lock_name"`
 
-        echo "COUNT 1: $count"
+       if [[ "--skip" != "$is_skip" ]]; then
+            count=`increment_lock_count "$lock_name"`
 
-        if [[ "$count" > 1 ]]; then
-          echo 'Lock count was greater than 1 after lock acqusition.';
+            if [[ "$count" -ne '1' ]]; then
+              echo 'Warning: Lock count was not equal to 1 after lock acquisition.';
+            fi
         fi
-        echo 'Acquired lock on first attempt.';
+
+        [[ "$is_skip" != "--skip" ]] && echo 'Acquired lock on first attempt.';
         return 0;
     }
 
     while true; do
-        echo 'Waiting for lock to be released.' > /dev/stderr;
+
+        echo "Waiting for lock ('$lock_name') to be released." > /dev/stderr;
+
         local val="$(cat "$fifo")"
+
         if test "$val" == "unlocked"; then
-          count=`increment_decrement_lock_count 1 "$lock_name"`
 
-        echo "COUNT 2: $count"
+          if [[ "--skip" != "$is_skip" ]]; then
 
-        if [[ "$count" > 1 ]]; then
-          echo 'Lock count was greater than 1 after lock acqusition.';
-        fi
-          echo 'Acquired lock.';
+              count=`decrement_lock_count "$lock_name"`
+
+                if [[ "$count" -ne '0' ]]; then
+                  echo 'Lock count was not equal to 0 after lock release.';
+                fi
+           fi
+
+          [[ "$is_skip" != "--skip" ]] && echo 'Acquired lock.';
           break;
         fi
     done;
@@ -135,14 +175,24 @@ is_named_pipe_already_opened0(){
 }
 
 is_named_pipe_being_read() {
-   /Users/alex/codes/ores/prompt-command/fcntl_mac "$1"
-#/home/oleg/codes/oresoftware/prompt-command/fcntl "$1"
+   if test "$(uname -s)" == 'Darwin'; then
+        /Users/alex/codes/ores/prompt-command/fcntl_mac "$1"
+   else
+        /home/oleg/codes/oresoftware/prompt-command/fcntl "$1"
+   fi
 }
 
 ql_release_lock(){
 
+   local is_skip="$2"
+
     if [[ -z "$1" ]]; then
-        echo "First argument must be defined.";
+        echo "First argument (lock name) must be defined.";
+        return 1;
+    fi
+
+    if [[   "${1// }" != "$1" ]]; then
+        echo "First argument (the lock-name) cannot contain white-space.";
         return 1;
     fi
 
@@ -169,22 +219,22 @@ ql_release_lock(){
 
     # https://unix.stackexchange.com/questions/522877/how-to-cat-named-pipe-without-waiting/522881
 
+     if [[ "--skip" != "$is_skip" ]]; then
 
-    count=`increment_decrement_lock_count '-1' "$lock_name"`
+        count=`decrement_lock_count "$lock_name"`
 
+        if [[ "$count" -ne '0' ]]; then
+          echo 'Lock count was not equal to 0 after unlocking.'
+        fi
 
-    if [[ "$count" > 0 ]]; then
-      echo 'Lock count was greater than 0.'
     fi
 
    if  is_named_pipe_being_read "$fifo"; then
         echo "unlocked" > "$fifo"
    else
        rm -rf "$lock_dir"
-       echo "Lock deleted."
+       [[ "$is_skip" != "--skip" ]] && echo "Lock deleted."
    fi
-
-
 
 
 }

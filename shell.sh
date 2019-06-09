@@ -50,13 +50,13 @@ filter_my_bsh_history(){
 
 clean_str_to_json(){
 
-    prev='';
-    result='';
-    back_slash='\'
+    local prev='';
+    local result='';
+    local back_slash='\'
+    local bad_str="$1";
+    local token='';
 
-    bad_str="$1";
-
-    for i in $(seq 1 ${#bad_str}); do
+    for i in $(seq 1 "${#bad_str}"); do
 
        token="${bad_str:i-1:1}"
 
@@ -88,12 +88,14 @@ export previous_cmd="";
 
 run_bash_history(){
 
+    export shell_count=1
+
     local pid="$1"
-    local ec="$2"
+    local ec="${2:-'unknown'}"
 
     read skip rest < <(history 1 );  # first token skipped, remainder stored in variable called rest
 
-    hist="$(echo "$rest" | filter_my_bsh_history)"
+    local hist="$(echo "$rest" | filter_my_bsh_history)"
 
     if [[ -z "$hist" ]]; then
         return;
@@ -103,14 +105,14 @@ run_bash_history(){
         return;
     fi
 
-    ql_acquire_lock bash_hist
+    ql_acquire_lock bash_hist --skip
 
     export previous_cmd="$hist"
 
 #    data="$( jq -nc --arg str "$hist" '{"attr":$str}' )"
 #    hist="$(echo "$data" | jq '.attr')"
 
-     clean_hist="$(clean_str_to_json "$hist")"
+    local clean_hist="$(clean_str_to_json "$hist")"
 
 #    hist="$(echo "$hist" | jq -r -R)"  # clean hist
 
@@ -131,7 +133,7 @@ EOF
 
    export previous_pwd="$PWD";
 
-   ql_release_lock bash_hist
+   ql_release_lock bash_hist --skip
 
 }
 
@@ -141,7 +143,7 @@ remove_old_history(){
 
 #  curr_date="$(date -v-1d +%F)"
 
-  curr_date="$(date)"
+  local curr_date="$(date)"
 
   while read line; do
 
@@ -163,6 +165,20 @@ read_my_bash_history(){
 
 export PROMPT_COMMAND='run_bash_history $! $?;';
 
+export shell_count=1
+
+read_up_line_from_bash_history(){
+ export shell_count=$((shell_count++))
+ cat < <(tail -n "$shell_count" ~/my_bash_history |  head -n 1)
+}
+
+read_down_line_from_bash_history(){
+ export shell_count=$((shell_count--))
+ cat < <(tail -n "$shell_count" ~/my_bash_history |  head -n 1 )
+}
+
+bind -x '"\C-o": read_up_line_from_bash_history'
+bind -x '"\C-p": read_down_line_from_bash_history'
 
 if [[ "$all_interos_export" == "nope" ]]; then
   set +a;
