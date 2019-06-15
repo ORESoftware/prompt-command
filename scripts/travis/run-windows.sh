@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+
+# #!/usr/bin/env bash
 
 C:\wget\wget.exe --version
 
